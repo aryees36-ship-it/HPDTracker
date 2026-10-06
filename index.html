@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HPD e-Tracker</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+    <!-- =====================================================
+     LANDING PAGE
+===================================================== -->
+
+    <section id="landingPage" class="landing-page">
+
+        <div class="landing-overlay"></div>
+
+        <div class="landing-content">
+
+            <div class="landing-logo-area">
+
+                <div class="landing-logo">
+                    <img src="GHS logo.png" alt="Ghana Health Service Logo">
+                </div>
+
+                <div>
+                    <h1>
+                        HPD e-Tracker
+                    </h1>
+
+                    <p>
+                        Health Promotion Division
+                    </p>
+
+                    <p>
+                        Ghana Health Service
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="landing-divider"></div>
+
+
+            <h2>
+                Quarterly Planning, Implementation
+                & Performance Tracking System
+            </h2>
+
+
+            <p class="landing-description">
+                A digital platform for planning, monitoring and
+                reporting Health Promotion Division activities
+                and performance.
+            </p>
+
+
+            <div class="landing-features">
+
+                <div class="landing-feature">
+
+                    <span class="feature-icon">
+                        📋
+                    </span>
+
+                    <h3>
+                        Plan
+                    </h3>
+
+                    <p>
+                        Develop quarterly priorities,
+                        activities and targets.
+                    </p>
+
+                </div>
+
+
+                <div class="landing-feature">
+
+                    <span class="feature-icon">
+                        📊
+                    </span>
+
+                    <h3>
+                        Track
+                    </h3>
+
+                    <p>
+                        Monitor implementation and
+                        achievement throughout the quarter.
+                    </p>
+
+                </div>
+
+
+                <div class="landing-feature">
+
+                    <span class="feature-icon">
+                        📈
+                    </span>
+
+                    <h3>
+                        Perform
+                    </h3>
+
+                    <p>
+                        View performance and generate
+                        management reports.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <button type="button" id="continueToTrackerBtn" class="landing-continue-btn">
+                Continue to e-Tracker
+                <span>→</span>
+            </button>
+
+
+            <p class="landing-footer">
+                Health Promotion Division • Ghana Health Service
+            </p>
+
+        </div>
+
+    </section>
+    <!-- =====================================================
+     TOP HEADER
+===================================================== -->
+
+    <header class="topbar">
+
+        <div>
+
+            <h1>HPD e-Tracker</h1>
+
+            <p>
+                Health Promotion Division • Ghana Health Service
+            </p>
+
+        </div>
+
+
+        <div class="quarter">
+
+            <label for="quarter">
+                Reporting Period
+            </label>
+
+            <select id="quarter">
+
+                <option value="2026 Q4">
+                    2026 Q4
+                </option>
+
+                <option value="2027 Q1">
+                    2027 Q1
+                </option>
+
+                <option value="2027 Q2">
+                    2027 Q2
+                </option>
+
+                <option value="2027 Q3">
+                    2027 Q3
+                </option>
+
+                <option value="2027 Q4">
+                    2027 Q4
+                </option>
+
+            </select>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =====================================================
+     NAVIGATION
+===================================================== -->
+
+    <nav class="navigation">
+
+        <button type="button" class="nav-btn active" data-page="dashboard">
+            Dashboard
+        </button>
+
+
+        <button type="button" class="nav-btn" data-page="planning">
+            Quarterly Planning
+        </button>
+
+
+        <button type="button" class="nav-btn" data-page="tasks">
+            Task Tracker
+        </button>
+
+
+        <button type="button" class="nav-btn" data-page="reports">
+            Reports
+        </button>
+
+    </nav>
+
+
+
+    <main>
+
+
+
+        <!-- =====================================================
+     DASHBOARD
+===================================================== -->
+
+        <section id="dashboard" class="page active-page">
+
+            <div class="page-header">
+
+                <div>
+
+                    <h2>
+                        HPD Division Dashboard
+                    </h2>
+
+                    <p>
+                        Overall performance of Health Promotion Division activities.
+                    </p>
+
+                </div>
+
+
+                <div class="dashboard-filter">
+
+                    <label for="dashboardUnit">
+                        Unit
+                    </label>
+
+                    <select id="dashboardUnit">
+
+                        <option value="">
+                            All Units
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- SUMMARY CARDS -->
+
+            <div class="summary-grid">
+
+                <div class="summary-card">
+
+                    <span>
+                        Units
+                    </span>
+
+                    <strong id="totalUnits">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <span>
+                        Priorities
+                    </span>
+
+                    <strong id="totalPriorities">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <span>
+                        Tasks
+                    </span>
+
+                    <strong id="totalTasks">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <span>
+                        Overall Achievement
+                    </span>
+
+                    <strong id="overallAchievement">
+                        0%
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- STATUS CARDS -->
+
+            <div class="summary-grid">
+
+                <div class="summary-card">
+
+                    <span>
+                        Completed
+                    </span>
+
+                    <strong id="completedTasks">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <span>
+                        In Progress
+                    </span>
+
+                    <strong id="inProgressTasks">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <span>
+                        Delayed
+                    </span>
+
+                    <strong id="delayedTasks">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <span>
+                        Not Started
+                    </span>
+
+                    <strong id="notStartedTasks">
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- DASHBOARD PERFORMANCE -->
+
+            <div class="dashboard-grid">
+
+
+                <!-- UNIT PERFORMANCE -->
+
+                <div class="card">
+
+                    <h3>
+                        Unit Performance
+                    </h3>
+
+                    <div id="unitPerformance">
+
+                        <p class="empty">
+                            No planning data available yet.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- TASK STATUS -->
+
+                <div class="card">
+
+                    <h3>
+                        Task Status
+                    </h3>
+
+                    <div id="taskStatus">
+
+                        <p class="empty">
+                            No tasks recorded yet.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================================================
+     DASHBOARD CHARTS
+===================================================== -->
+
+            <div class="dashboard-grid">
+
+                <!-- UNIT PERFORMANCE CHART -->
+
+                <div class="card">
+
+                    <h3>
+                        Unit Performance
+                    </h3>
+
+                    <p>
+                        Achievement percentage by unit.
+                    </p>
+
+                    <div class="chart-container">
+
+                        <canvas id="unitPerformanceChart"></canvas>
+
+                    </div>
+
+                </div>
+
+
+                <!-- TASK STATUS CHART -->
+
+                <div class="card">
+
+                    <h3>
+                        Task Status Distribution
+                    </h3>
+
+                    <p>
+                        Current status of quarterly tasks.
+                    </p>
+
+                    <div class="chart-container">
+
+                        <canvas id="taskStatusChart"></canvas>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- TARGET VS ACTUAL CHART -->
+
+            <div class="card">
+
+                <h3>
+                    Target vs Actual Achievement
+                </h3>
+
+                <p>
+                    Comparison of planned targets and actual achievements.
+                </p>
+
+                <div class="chart-container target-chart">
+
+                    <canvas id="targetActualChart"></canvas>
+
+                </div>
+
+            </div>
+
+            <!-- YEARLY QUARTERLY ANALYSIS -->
+            <div class="card">
+                <h3>Yearly Quarterly Performance Analysis</h3>
+                <p>Quarter-by-quarter performance across the selected year.</p>
+
+                <div class="chart-container target-chart">
+                    <canvas id="yearlyQuarterlyChart"></canvas>
+                </div>
+            </div>
+
+
+
+            <!-- UNIT PERFORMANCE TABLE -->
+
+            <div class="card table-card">
+
+                <div class="page-header">
+
+                    <div>
+
+                        <h3>
+                            Unit Performance Summary
+                        </h3>
+
+                        <p>
+                            Performance against quarterly targets.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Unit
+                            </th>
+
+                            <th>
+                                Priorities
+                            </th>
+
+                            <th>
+                                Tasks
+                            </th>
+
+                            <th>
+                                Target
+                            </th>
+
+                            <th>
+                                Actual
+                            </th>
+
+                            <th>
+                                Achievement
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="unitPerformanceTableBody">
+
+                        <tr>
+
+                            <td colspan="6" class="empty">
+                                No performance data available.
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+
+
+        <!-- =====================================================
+     QUARTERLY PLANNING
+===================================================== -->
+
+        <section id="planning" class="page">
+
+
+            <div class="page-header">
+
+                <div>
+
+                    <h2>
+                        Quarterly Planning
+                    </h2>
+
+                    <p>
+                        Create all priority areas and activities for the selected quarter.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- PLANNING SETUP -->
+
+            <div class="card">
+
+                <h3>
+                    1. Set Up Quarterly Plan
+                </h3>
+
+                <p>
+                    Select the unit, quarter and number of priority areas
+                    you want to plan for.
+                </p>
+
+
+                <div class="form-grid">
+
+
+                    <!-- UNIT -->
+
+                    <div class="form-group">
+
+                        <label for="unit">
+                            Unit *
+                        </label>
+
+                        <select id="unit" required>
+
+                            <option value="">
+                                Loading units...
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+
+                    <!-- QUARTER -->
+
+                    <div class="form-group">
+
+                        <label for="planningQuarter">
+                            Quarter *
+                        </label>
+
+                        <select id="planningQuarter" required>
+
+                            <option value="2026 Q4">
+                                2026 Q4
+                            </option>
+
+                            <option value="2027 Q1">
+                                2027 Q1
+                            </option>
+
+                            <option value="2027 Q2">
+                                2027 Q2
+                            </option>
+
+                            <option value="2027 Q3">
+                                2027 Q3
+                            </option>
+
+                            <option value="2027 Q4">
+                                2027 Q4
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+
+                    <!-- NUMBER OF PRIORITIES -->
+
+                    <div class="form-group">
+
+                        <label for="priorityCount">
+                            Number of Priority Areas *
+                        </label>
+
+                        <input type="number" id="priorityCount" min="1" max="50" value="1" required>
+
+                    </div>
+
+
+
+                    <!-- NUMBER OF TASKS -->
+
+                    <div class="form-group">
+
+                        <label for="taskCount">
+                            Initial Tasks per Priority *
+                        </label>
+
+                        <input type="number" id="taskCount" min="1" max="50" value="1" required>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <div class="form-actions">
+
+                    <button type="button" class="primary-btn" id="generatePlanningBtn">
+                        Generate Planning Form
+                    </button>
+
+                </div>
+
+
+                <p id="planningSetupMessage"></p>
+
+            </div>
+
+
+
+
+            <!-- GENERATED PLANNING FORM -->
+
+            <div id="generatedPlanningForm" style="display:none;">
+
+
+                <div class="card">
+
+                    <h3>
+                        2. Complete Quarterly Plan
+                    </h3>
+
+                    <p id="planningSummary">
+                        Complete the priority areas and activities below.
+                    </p>
+
+                </div>
+
+
+
+                <!-- PRIORITIES ARE GENERATED HERE -->
+
+                <div id="priorityContainer"></div>
+
+
+
+                <!-- SAVE COMPLETE PLAN -->
+
+                <div class="card">
+
+                    <div class="form-actions">
+
+                        <button type="button" class="primary-btn" id="saveCompletePlanBtn">
+                            Save Complete Quarterly Plan
+                        </button>
+
+
+                        <button type="button" class="secondary-btn" id="cancelPlanningBtn">
+                            Start Again
+                        </button>
+
+                    </div>
+
+
+                    <p id="formMessage"></p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+
+        <!-- =====================================================
+     TASK TRACKER
+===================================================== -->
+
+        <section id="tasks" class="page">
+
+
+            <div class="page-header">
+
+                <div>
+
+                    <h2>
+                        Task Tracker
+                    </h2>
+
+                    <p>
+                        Monitor implementation of quarterly activities.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- TASK TABLE -->
+
+            <div class="card table-card">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Unit
+                            </th>
+
+                            <th>
+                                Priority
+                            </th>
+
+                            <th>
+                                Task
+                            </th>
+
+                            <th>
+                                Target
+                            </th>
+
+                            <th>
+                                Actual
+                            </th>
+
+                            <th>
+                                Achievement
+                            </th>
+
+                            <th>
+                                Funding
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="taskTableBody">
+
+                        <tr>
+
+                            <td colspan="8" class="empty">
+                                Loading tasks...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+
+
+            <!-- PROGRESS UPDATE -->
+
+            <div class="card">
+
+                <h2>
+                    Update Task Progress
+                </h2>
+
+
+                <p>
+                    Record actual achievement and implementation
+                    status for an existing task.
+                </p>
+
+
+
+                <form id="progressForm">
+
+                    <div class="form-grid">
+
+
+                        <!-- TASK -->
+
+                        <div class="form-group full-width">
+
+                            <label for="progressTask">
+                                Task *
+                            </label>
+
+                            <select id="progressTask" required>
+
+                                <option value="">
+                                    Select Task
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+
+                        <!-- REPORTING PERIOD -->
+
+                        <div class="form-group">
+
+                            <label for="reportingPeriod">
+                                Reporting Period *
+                            </label>
+
+                            <select id="reportingPeriod" required>
+
+                                <option value="Q1">
+                                    Q1
+                                </option>
+
+                                <option value="Q2">
+                                    Q2
+                                </option>
+
+                                <option value="Q3">
+                                    Q3
+                                </option>
+
+                                <option value="Q4">
+                                    Q4
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+
+                        <!-- ACTUAL -->
+
+                        <div class="form-group">
+
+                            <label for="progressActual">
+                                Actual Achievement *
+                            </label>
+
+                            <input type="number" id="progressActual" min="0" required>
+
+                        </div>
+
+
+
+                        <!-- STATUS -->
+
+                        <div class="form-group">
+
+                            <label for="progressStatus">
+                                Status *
+                            </label>
+
+                            <select id="progressStatus" required>
+
+                                <option value="In Progress">
+                                    In Progress
+                                </option>
+
+                                <option value="Completed">
+                                    Completed
+                                </option>
+
+                                <option value="Delayed">
+                                    Delayed
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+
+                        <!-- CHALLENGES -->
+
+                        <div class="form-group full-width">
+
+                            <label for="challenges">
+                                Challenges
+                            </label>
+
+                            <textarea id="challenges" rows="3"
+                                placeholder="Describe any challenges affecting implementation"></textarea>
+
+                        </div>
+
+
+
+                        <!-- CORRECTIVE ACTION -->
+
+                        <div class="form-group full-width">
+
+                            <label for="correctiveAction">
+                                Corrective Action
+                            </label>
+
+                            <textarea id="correctiveAction" rows="3"
+                                placeholder="Describe the action being taken"></textarea>
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <div class="form-actions">
+
+                        <button type="submit" class="primary-btn">
+                            Save Progress Update
+                        </button>
+
+
+                        <button type="reset" class="secondary-btn">
+                            Clear
+                        </button>
+
+                    </div>
+
+
+                    <p id="progressMessage"></p>
+
+                </form>
+
+            </div>
+
+        </section>
+
+
+
+
+        <!-- =====================================================
+     REPORTS
+===================================================== -->
+
+        <section id="reports" class="page">
+
+
+            <div class="page-header">
+
+                <div>
+
+                    <h2>
+                        Reports
+                    </h2>
+
+                    <p>
+                        Generate quarterly and funding reports.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="dashboard-grid">
+
+
+                <!-- QUARTERLY PERFORMANCE -->
+
+                <div class="card">
+
+                    <h3>
+                        Quarterly Performance
+                    </h3>
+
+                    <p>
+                        Generate a summary of priorities,
+                        activities, targets and achievements
+                        for the selected quarter.
+                    </p>
+
+                    <button type="button" class="primary-btn" id="quarterlyReportBtn">
+                        Generate Report
+                    </button>
+
+                </div>
+
+
+
+                <!-- FUNDING -->
+
+                <div class="card">
+
+                    <h3>
+                        Funding Summary
+                    </h3>
+
+                    <p>
+                        View activities grouped by
+                        source of funding.
+                    </p>
+
+                    <button type="button" class="primary-btn" id="fundingReportBtn">
+                        View Funding Summary
+                    </button>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+
+    </main>
+
+
+
+    <!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="app.js"></script>
+
+
+</body>
+
+</html>
