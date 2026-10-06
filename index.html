@@ -28,7 +28,7 @@
 
             <div class="landing-logo-area">
 
-                <div class="landing-logo">
+                 <div class="landing-logo">
                     <img src="GHS logo.png" alt="Ghana Health Service Logo">
                 </div>
 
@@ -245,11 +245,11 @@
 
                 <div class="dashboard-filter">
 
-                    <label for="dashboardDepartment">
-                        Department
+                    <label for="dashboardUnit">
+                        Departments
                     </label>
 
-                    <select id="dashboardDepartment">
+                    <select id="dashboardUnit">
 
                         <option value="">
                             All Departments
@@ -273,7 +273,7 @@
                         Departments
                     </span>
 
-                    <strong id="totalDepartments">
+                    <strong id="totalUnits">
                         0
                     </strong>
 
@@ -386,15 +386,15 @@
             <div class="dashboard-grid">
 
 
-                <!-- Department PERFORMANCE -->
+                <!-- UNIT PERFORMANCE -->
 
                 <div class="card">
 
                     <h3>
-                        Department Performance
+                        Departments Performance
                     </h3>
 
-                    <div id="DepartmentPerformance">
+                    <div id="unitPerformance">
 
                         <p class="empty">
                             No planning data available yet.
@@ -426,28 +426,27 @@
 
             </div>
 
-
             <!-- =====================================================
      DASHBOARD CHARTS
 ===================================================== -->
 
             <div class="dashboard-grid">
 
-                <!-- Department PERFORMANCE CHART -->
+                <!-- UNIT PERFORMANCE CHART -->
 
                 <div class="card">
 
                     <h3>
-                        Department Performance
+                        Departments Performance
                     </h3>
 
                     <p>
-                        Achievement percentage by Department.
+                        Achievement percentage by Departments.
                     </p>
 
                     <div class="chart-container">
 
-                        <canvas id="DepartmentPerformanceChart"></canvas>
+                        <canvas id="unitPerformanceChart"></canvas>
 
                     </div>
 
@@ -497,6 +496,7 @@
 
             </div>
 
+
             <!-- YEARLY QUARTERLY ANALYSIS -->
             <div class="card">
                 <h3>Yearly Quarterly Performance Analysis</h3>
@@ -507,9 +507,7 @@
                 </div>
             </div>
 
-
-
-            <!-- Department PERFORMANCE TABLE -->
+            <!-- UNIT PERFORMANCE TABLE -->
 
             <div class="card table-card">
 
@@ -518,7 +516,7 @@
                     <div>
 
                         <h3>
-                            Department Performance Summary
+                            Departments Performance Summary
                         </h3>
 
                         <p>
@@ -537,7 +535,7 @@
                         <tr>
 
                             <th>
-                                Department
+                                Departments
                             </th>
 
                             <th>
@@ -565,7 +563,7 @@
                     </thead>
 
 
-                    <tbody id="DepartmentPerformanceTableBody">
+                    <tbody id="unitPerformanceTableBody">
 
                         <tr>
 
@@ -620,7 +618,7 @@
                 </h3>
 
                 <p>
-                    Select the Department, quarter and number of priority areas
+                    Select the department, quarter and number of priority areas
                     you want to plan for.
                 </p>
 
@@ -628,18 +626,18 @@
                 <div class="form-grid">
 
 
-                    <!-- Department -->
+                    <!-- UNIT -->
 
                     <div class="form-group">
 
-                        <label for="Department">
-                            Department *
+                        <label for="unit">
+                            Departments *
                         </label>
 
-                        <select id="Department" required>
+                        <select id="unit" required>
 
                             <option value="">
-                                Loading Departments...
+                                Loading departments...
                             </option>
 
                         </select>
