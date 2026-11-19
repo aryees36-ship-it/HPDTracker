@@ -38,6 +38,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 
+document.getElementById("continueToTrackerBtn").addEventListener("click", function () {
+    window.location.href = "dashboard.html";
+});
 
 /* ==================================================
    INITIALIZE APPLICATION
@@ -952,15 +955,12 @@ function updateDashboardNumbers(
     );
 
 
+   
     const completed =
         filteredTasks.filter(
             function (task) {
-
-                return normalizeStatus(
-                    task.Status
-                ) ===
+                return getEffectiveTaskStatus(task) ===
                     "completed";
-
             }
         ).length;
 
@@ -968,12 +968,8 @@ function updateDashboardNumbers(
     const inProgress =
         filteredTasks.filter(
             function (task) {
-
-                return normalizeStatus(
-                    task.Status
-                ) ===
+                return getEffectiveTaskStatus(task) ===
                     "in progress";
-
             }
         ).length;
 
@@ -981,12 +977,8 @@ function updateDashboardNumbers(
     const delayed =
         filteredTasks.filter(
             function (task) {
-
-                return normalizeStatus(
-                    task.Status
-                ) ===
+                return getEffectiveTaskStatus(task) ===
                     "delayed";
-
             }
         ).length;
 
@@ -994,14 +986,11 @@ function updateDashboardNumbers(
     const notStarted =
         filteredTasks.filter(
             function (task) {
-
-                return normalizeStatus(
-                    task.Status
-                ) ===
+                return getEffectiveTaskStatus(task) ===
                     "not started";
-
             }
         ).length;
+
 
 
     let achievementTotal = 0;
@@ -1111,6 +1100,46 @@ function normalizeStatus(
 
 }
 
+
+function getEffectiveTaskStatus(task) {
+    const status = normalizeStatus(task.Status);
+
+    // Completed activities stay completed,
+    // even when their due date has passed.
+    if (status === "completed") {
+        return "completed";
+    }
+
+    // Support common due-date column names.
+    const dueDate =
+        task.Due_Date ||
+        task.DueDate ||
+        task.dueDate ||
+        task["Due Date"] ||
+        "";
+
+    if (dueDate) {
+        const due = new Date(dueDate);
+        const today = new Date();
+
+        today.setHours(0, 0, 0, 0);
+        due.setHours(0, 0, 0, 0);
+
+        if (!Number.isNaN(due.getTime()) && due < today) {
+            return "delayed";
+        }
+    }
+
+    if (status === "delayed") {
+        return "delayed";
+    }
+
+    if (status === "in progress") {
+        return "in progress";
+    }
+
+    return "not started";
+}
 
 /* ==================================================
    FORMAT PERCENTAGE
@@ -1349,16 +1378,14 @@ function renderUnitPerformance(
                     datasets: [
 
                         {
-
-                            label:
-                                "Achievement %",
-
-                            data:
-                                achievementValues,
-
-                            borderWidth: 1
-
-                        }
+                        label: "Achievement %",
+                        data: achievementValues,
+                        borderColor: "#9333EA",
+                        backgroundColor: "#9333EA",
+                        pointBackgroundColor: "#9333EA",
+                        pointBorderColor: "#7E22CE",
+                        borderWidth: 2
+                    }
 
                     ]
 
@@ -1594,7 +1621,6 @@ function renderTaskStatus(filteredTasks) {
 
                     datasets: [
                         {
-
                             data: [
                                 statuses.Completed,
                                 statuses["In Progress"],
@@ -1602,8 +1628,21 @@ function renderTaskStatus(filteredTasks) {
                                 statuses["Not Started"]
                             ],
 
-                            borderWidth: 1
+                            backgroundColor: [
+                                "#16A34A", // Completed — Green
+                                "#EAB308", // In Progress — Yellow
+                                "#DC2626", // Delayed — Red
+                                "#2563EB"  // Not Started — Blue
+                            ],
 
+                            borderColor: [
+                                "#15803D",
+                                "#CA8A04",
+                                "#B91C1C",
+                                "#1D4ED8"
+                            ],
+
+                            borderWidth: 1
                         }
                     ]
 
@@ -1721,6 +1760,11 @@ function escapeHtml(
    UNIT PERFORMANCE TABLE
 ================================================== */
 
+
+/* ==================================================
+   RENDER UNIT PERFORMANCE TABLE
+================================================== */
+
 function renderUnitPerformanceTable(filteredTasks) {
 
     const tableBody =
@@ -1732,6 +1776,7 @@ function renderUnitPerformanceTable(filteredTasks) {
 
     const unitStats = {};
 
+    // Collect performance statistics for each unit.
     filteredTasks.forEach(function (task) {
 
         const unitId =
@@ -1761,24 +1806,20 @@ function renderUnitPerformanceTable(filteredTasks) {
 
         stats.tasks++;
 
-        stats.target +=
-            Number(task.Target || 0);
-
-        stats.actual +=
-            Number(task.Actual || 0);
+        // Keep existing database field names.
+        stats.target += Number(task.Target || 0);
+        stats.actual += Number(task.Actual || 0);
 
     });
 
+    const unitIds = Object.keys(unitStats);
 
-    const unitIds =
-        Object.keys(unitStats);
-
-
+    // Show a message when there is no data.
     if (unitIds.length === 0) {
 
         tableBody.innerHTML = `
             <tr>
-                <td colspan="6" style="text-align:center;">
+                <td colspan="6" style="text-align: center;">
                     No data available for this quarter.
                 </td>
             </tr>
@@ -1787,56 +1828,43 @@ function renderUnitPerformanceTable(filteredTasks) {
         return;
     }
 
-
+    // Render one row for each unit.
     unitIds.forEach(function (unitId) {
 
-        const stats =
-            unitStats[unitId];
+        const stats = unitStats[unitId];
 
-        const unit =
-            units.find(function (item) {
+        const unit = units.find(function (item) {
 
-                return String(item.Unit_ID || "").trim() ===
-                    String(unitId).trim();
+            return String(item.Unit_ID || "").trim() ===
+                String(unitId).trim();
 
-            });
+        });
 
+        const unitName = unit
+            ? unit.Unit_Name
+            : unitId;
 
-        const unitName =
-            unit
-                ? unit.Unit_Name
-                : unitId;
+        const achievement = stats.target > 0
+            ? (stats.actual / stats.target) * 100
+            : 0;
 
-
-        const achievement =
-            stats.target > 0
-                ? (stats.actual / stats.target) * 100
-                : 0;
-
-
-        const row =
-            document.createElement("tr");
-
+        const row = document.createElement("tr");
 
         row.innerHTML = `
             <td>${unitName}</td>
-
             <td>${stats.priorities.size}</td>
-
             <td>${stats.tasks}</td>
-
             <td>${stats.target}</td>
             <td>${stats.actual}</td>
-
             <td>${formatPercentage(achievement)}</td>
         `;
-
 
         tableBody.appendChild(row);
 
     });
 
 }
+
 
 
 /* ==================================================
@@ -1897,25 +1925,22 @@ function renderTargetActualChart(filteredTasks) {
                     datasets: [
 
                         {
-                            label: "Target",
-
+                            label: "Number Planned",
                             data: [
                                 totalTarget
                             ],
-
+                            backgroundColor: "#2563EB",
+                            borderColor: "#1D4ED8",
                             borderWidth: 1
-
                         },
-
                         {
-                            label: "Actual",
-
+                            label: "Number Implemented",
                             data: [
                                 totalActual
                             ],
-
+                            backgroundColor: "#16A34A",
+                            borderColor: "#15803D",
                             borderWidth: 1
-
                         }
 
                     ]
@@ -1992,66 +2017,39 @@ function renderTargetActualChart(filteredTasks) {
    UNIT FILTERED
 ================================================== */
 
+
 function renderYearlyQuarterlyChart() {
 
-    const chartCanvas =
-        document.getElementById(
-            "yearlyQuarterlyChart"
-        );
+    const chartCanvas = document.getElementById("yearlyQuarterlyChart");
 
     if (!chartCanvas) {
         return;
     }
 
-
     /* ==========================================
        GET SELECTED YEAR
     ========================================== */
 
-    const selectedQuarter =
-        String(
-            currentQuarter || ""
-        ).trim();
+    const selectedQuarter = String(currentQuarter || "").trim();
 
+    const yearMatch = selectedQuarter.match(/\d{4}/);
 
-    const yearMatch =
-        selectedQuarter.match(
-            /\d{4}/
-        );
-
-
-    const selectedYear =
-        yearMatch
-            ? yearMatch[0]
-            : String(
-                new Date().getFullYear()
-            );
+    const selectedYear = yearMatch
+        ? yearMatch[0]
+        : String(new Date().getFullYear());
 
 
     /* ==========================================
        GET SELECTED UNIT
     ========================================== */
 
-    const dashboardUnit =
-        document.getElementById(
-            "dashboardUnit"
-        );
+    const dashboardUnit = document.getElementById("dashboardUnit");
 
+    const selectedUnit = dashboardUnit
+        ? String(dashboardUnit.value || "").trim()
+        : "";
 
-    const selectedUnit =
-        dashboardUnit
-            ? String(
-                dashboardUnit.value || ""
-            ).trim()
-            : "";
-
-
-    const quarters = [
-        "Q1",
-        "Q2",
-        "Q3",
-        "Q4"
-    ];
+    const quarters = ["Q1", "Q2", "Q3", "Q4"];
 
 
     /* ==========================================
@@ -2059,27 +2057,10 @@ function renderYearlyQuarterlyChart() {
     ========================================== */
 
     const quarterlyData = {
-
-        Q1: {
-            target: 0,
-            actual: 0
-        },
-
-        Q2: {
-            target: 0,
-            actual: 0
-        },
-
-        Q3: {
-            target: 0,
-            actual: 0
-        },
-
-        Q4: {
-            target: 0,
-            actual: 0
-        }
-
+        Q1: { target: 0, actual: 0 },
+        Q2: { target: 0, actual: 0 },
+        Q3: { target: 0, actual: 0 },
+        Q4: { target: 0, actual: 0 }
     };
 
 
@@ -2089,43 +2070,22 @@ function renderYearlyQuarterlyChart() {
 
     tasks.forEach(function (task) {
 
-        const taskPlanId =
-            String(
-                task.Plan_ID || ""
-            ).trim();
+        const taskPlanId = String(task.Plan_ID || "").trim();
 
-
-        const relatedPlan =
-            plans.find(function (plan) {
-
-                return String(
-                    plan.Plan_ID || ""
-                ).trim() ===
-                    taskPlanId;
-
-            });
-
+        const relatedPlan = plans.find(function (plan) {
+            return String(plan.Plan_ID || "").trim() === taskPlanId;
+        });
 
         if (!relatedPlan) {
             return;
         }
 
-
         /* Check year */
 
-        const planYear =
-            String(
-                relatedPlan.Year || ""
-            ).trim();
+        const planYear = String(relatedPlan.Year || "").trim();
 
-
-        if (
-            planYear !==
-            selectedYear
-        ) {
-
+        if (planYear !== selectedYear) {
             return;
-
         }
 
 
@@ -2135,32 +2095,15 @@ function renderYearlyQuarterlyChart() {
 
         if (selectedUnit) {
 
-            const taskUnitId =
-                String(
-                    task.Unit_ID || ""
-                ).trim();
+            const taskUnitId = String(task.Unit_ID || "").trim();
 
+            const planUnitId = String(relatedPlan.Unit_ID || "").trim();
 
-            const planUnitId =
-                String(
-                    relatedPlan.Unit_ID || ""
-                ).trim();
+            const unitId = taskUnitId || planUnitId;
 
-
-            const unitId =
-                taskUnitId ||
-                planUnitId;
-
-
-            if (
-                unitId !==
-                selectedUnit
-            ) {
-
+            if (unitId !== selectedUnit) {
                 return;
-
             }
-
         }
 
 
@@ -2168,33 +2111,15 @@ function renderYearlyQuarterlyChart() {
            GET QUARTER
         ====================================== */
 
-        let quarter =
-            String(
-                relatedPlan.Quarter || ""
-            ).trim().toUpperCase();
+        let quarter = String(relatedPlan.Quarter || "").trim().toUpperCase();
 
-
-        /* Handle values such as:
-           2027 Q1 */
-
-        if (
-            quarter.includes(" ")
-        ) {
-
-            quarter =
-                quarter
-                    .split(" ")
-                    .pop();
-
+        // Handle values such as "2027 Q1"
+        if (quarter.includes(" ")) {
+            quarter = quarter.split(" ").pop();
         }
 
-
-        if (
-            !quarterlyData[quarter]
-        ) {
-
+        if (!quarterlyData[quarter]) {
             return;
-
         }
 
 
@@ -2202,20 +2127,9 @@ function renderYearlyQuarterlyChart() {
            ADD TARGET AND ACTUAL
         ====================================== */
 
-        quarterlyData[
-            quarter
-        ].target +=
-            Number(
-                task.Target || 0
-            );
+        quarterlyData[quarter].target += Number(task.Target || 0);
 
-
-        quarterlyData[
-            quarter
-        ].actual +=
-            Number(
-                task.Actual || 0
-            );
+        quarterlyData[quarter].actual += Number(task.Actual || 0);
 
     });
 
@@ -2225,63 +2139,32 @@ function renderYearlyQuarterlyChart() {
     ========================================== */
 
     const targetValues = [];
-
     const actualValues = [];
-
     const achievementValues = [];
 
+    quarters.forEach(function (quarter) {
 
-    quarters.forEach(
-        function (quarter) {
+        const data = quarterlyData[quarter];
 
-            const data =
-                quarterlyData[
-                quarter
-                ];
+        targetValues.push(data.target);
+        actualValues.push(data.actual);
 
+        const achievement = data.target > 0
+            ? (data.actual / data.target) * 100
+            : 0;
 
-            targetValues.push(
-                data.target
-            );
-
-
-            actualValues.push(
-                data.actual
-            );
-
-
-            const achievement =
-                data.target > 0
-                    ? (
-                        data.actual /
-                        data.target
-                    ) * 100
-                    : 0;
-
-
-            achievementValues.push(
-                achievement
-            );
-
-        }
-    );
+        achievementValues.push(achievement);
+    });
 
 
     /* ==========================================
        GET UNIT NAME
     ========================================== */
 
-    let unitTitle =
-        "All Units";
-
+    let unitTitle = "All Units";
 
     if (selectedUnit) {
-
-        unitTitle =
-            getUnitName(
-                selectedUnit
-            );
-
+        unitTitle = getUnitName(selectedUnit);
     }
 
 
@@ -2289,12 +2172,8 @@ function renderYearlyQuarterlyChart() {
        DESTROY PREVIOUS CHART
     ========================================== */
 
-    if (
-        window.yearlyQuarterlyChartInstance
-    ) {
-
+    if (window.yearlyQuarterlyChartInstance) {
         window.yearlyQuarterlyChartInstance.destroy();
-
     }
 
 
@@ -2302,132 +2181,110 @@ function renderYearlyQuarterlyChart() {
        CREATE UPDATED CHART
     ========================================== */
 
-    window.yearlyQuarterlyChartInstance =
-        new Chart(
-            chartCanvas,
-            {
+    window.yearlyQuarterlyChartInstance = new Chart(
+        chartCanvas,
+        {
+            type: "line",
 
-                type: "line",
+            data: {
+                labels: quarters,
 
-                data: {
+                datasets: [
+                    {
+                        label: "Number Planned",
+                        data: targetValues,
 
-                    labels: quarters,
+                        borderColor: "#2563EB",
+                        backgroundColor: "#2563EB",
+                        pointBackgroundColor: "#2563EB",
+                        pointBorderColor: "#1D4ED8",
 
-                    datasets: [
-
-                        {
-                            label: "Target",
-
-                            data:
-                                targetValues,
-
-                            borderWidth: 2,
-
-                            tension: 0.3
-                        },
-
-                        {
-                            label: "Actual",
-
-                            data:
-                                actualValues,
-
-                            borderWidth: 2,
-
-                            tension: 0.3
-                        },
-
-                        {
-                            label:
-                                "Achievement %",
-
-                            data:
-                                achievementValues,
-
-                            borderWidth: 2,
-
-                            tension: 0.3
-                        }
-
-                    ]
-
-                },
-
-                options: {
-
-                    responsive: true,
-
-                    maintainAspectRatio: false,
-
-                    scales: {
-
-                        y: {
-
-                            beginAtZero: true,
-
-                            title: {
-
-                                display: true,
-
-                                text:
-                                    "Value / Achievement %"
-
-                            }
-
-                        }
-
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.3
                     },
+                    {
+                        label: "Number Implemented",
+                        data: actualValues,
 
-                    plugins: {
+                        borderColor: "#16A34A",
+                        backgroundColor: "#16A34A",
+                        pointBackgroundColor: "#16A34A",
+                        pointBorderColor: "#15803D",
+
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.3
+                    },
+                    {
+                        label: "Achievement %",
+                        data: achievementValues,
+
+                        borderColor: "#9333EA",
+                        backgroundColor: "#9333EA",
+                        pointBackgroundColor: "#9333EA",
+                        pointBorderColor: "#7E22CE",
+
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.3
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
 
                         title: {
-
                             display: true,
-
-                            text:
-                                selectedYear +
-                                " Quarterly Performance - " +
-                                unitTitle
-
-                        },
-
-                        legend: {
-
-                            position:
-                                "bottom"
-
-                        },
-
-                        tooltip: {
-
-                            callbacks: {
-
-                                title:
-                                    function (context) {
-
-                                        return (
-                                            context[0].label +
-                                            " - " +
-                                            unitTitle
-                                        );
-
-                                    }
-
-                            }
-
+                            text: "Number / Achievement %"
                         }
-
                     }
+                },
 
+                plugins: {
+                    title: {
+                        display: true,
+
+                        text:
+                            selectedYear +
+                            " Quarterly Performance - " +
+                            unitTitle
+                    },
+
+                    legend: {
+                        position: "bottom"
+                    },
+
+                    tooltip: {
+                        callbacks: {
+                            title: function (context) {
+                                return (
+                                    context[0].label +
+                                    " - " +
+                                    unitTitle
+                                );
+                            }
+                        }
+                    }
                 }
-
             }
-        );
-
+        }
+    );
 }
+
 /* ==================================================
    TASK TABLE
 ================================================== */
+
 
 function renderTaskTable() {
 
@@ -2437,158 +2294,123 @@ function renderTaskTable() {
         );
 
     if (!tableBody) {
-
         return;
-
     }
-
 
     const filteredTasks =
         getFilteredTasks();
 
-
     tableBody.innerHTML = "";
 
-
-    if (
-        filteredTasks.length === 0
-    ) {
+    if (filteredTasks.length === 0) {
 
         const row =
-            document.createElement(
-                "tr"
-            );
+            document.createElement("tr");
 
+        row.innerHTML = `
+            <td
+                colspan="8"
+                style="text-align:center;"
+            >
+                No tasks available for
+                ${escapeHtml(currentQuarter)}
+            </td>
+        `;
+
+        tableBody.appendChild(row);
+        return;
+    }
+
+    filteredTasks.forEach(function (task) {
+
+        const row =
+            document.createElement("tr");
+
+        const achievement =
+            Number(task["Achievement_%"] || 0);
+
+        // Get the effective status, including overdue detection.
+        const effectiveStatus =
+            getEffectiveTaskStatus(task);
+
+        // Convert internal status values to readable labels.
+        const statusLabels = {
+            "completed": "Completed",
+            "in progress": "In Progress",
+            "not started": "Not Started",
+            "delayed": "Delayed"
+        };
+
+        const status =
+            statusLabels[effectiveStatus] ||
+            "Not Started";
 
         row.innerHTML = `
 
-      <td
-        colspan="8"
-        style="text-align:center;"
-      >
-        No tasks available for
-        ${escapeHtml(
-            currentQuarter
-        )}
-      </td>
+            <td>
+                ${escapeHtml(
+                    getUnitName(task.Unit_ID)
+                )}
+            </td>
 
-    `;
+            <td>
+                ${escapeHtml(task.Priority || "")}
+            </td>
 
+            <td>
+                ${escapeHtml(task.Task || "")}
+            </td>
 
-        tableBody.appendChild(
-            row
-        );
+            <td>
+                ${formatNumber(
+                    task.Number_Planned ?? task.Target
+                )}
+            </td>
 
-        return;
+            <td>
+                ${formatNumber(task.Actual)}
+            </td>
 
-    }
+            <td>
+                ${formatPercentage(achievement)}
+            </td>
 
+            <td>
+                ${escapeHtml(
+                    task.Source_of_Funding || ""
+                )}
+            </td>
 
-    filteredTasks.forEach(
-        function (task) {
+            <td>
 
-            const row =
-                document.createElement(
-                    "tr"
-                );
+                <span class="status-badge ${getStatusClass(
+                    effectiveStatus
+                )}">
+                    ${escapeHtml(status)}
+                </span>
 
+                <button
+                    type="button"
+                    class="update-task-btn"
+                    data-task-id="${escapeHtml(
+                        task.Task_ID || ""
+                    )}"
+                >
+                    Update
+                </button>
 
-            const achievement =
-                Number(
-                    task["Achievement_%"] ||
-                    0
-                );
+            </td>
 
+        `;
 
-            const status =
-                task.Status ||
-                "Not Started";
+        tableBody.appendChild(row);
 
-
-            row.innerHTML = `
-
-        <td>
-          ${escapeHtml(
-                getUnitName(
-                    task.Unit_ID
-                )
-            )}
-        </td>
-
-        <td>
-          ${escapeHtml(
-                task.Priority || ""
-            )}
-        </td>
-
-        <td>
-          ${escapeHtml(
-                task.Task || ""
-            )}
-        </td>
-
-        <td>
-          ${formatNumber(
-                task.Target
-            )}
-        </td>
-
-        <td>
-          ${formatNumber(
-                task.Actual
-            )}
-        </td>
-
-        <td>
-          ${formatPercentage(
-                achievement
-            )}
-        </td>
-
-        <td>
-          ${escapeHtml(
-                task.Source_of_Funding || ""
-            )}
-        </td>
-
-        <td>
-
-          <span class="status-badge ${getStatusClass(
-                status
-            )}">
-
-            ${escapeHtml(
-                status
-            )}
-
-          </span>
-
-          <button
-            type="button"
-            class="update-task-btn"
-            data-task-id="${escapeHtml(
-                task.Task_ID || ""
-            )}"
-          >
-            Update
-          </button>
-
-        </td>
-
-      `;
-
-
-            tableBody.appendChild(
-                row
-            );
-
-        }
-    );
-
+    });
 
     setupTaskUpdateButtons();
 
 }
+
 
 
 /* ==================================================
@@ -2621,49 +2443,30 @@ function formatNumber(
    STATUS CLASS
 ================================================== */
 
-function getStatusClass(
-    status
-) {
+
+function getStatusClass(status) {
 
     const normalized =
-        normalizeStatus(
-            status
-        );
+        normalizeStatus(status);
 
-
-    if (
-        normalized ===
-        "completed"
-    ) {
-
+    if (normalized === "completed") {
         return "status-completed";
-
     }
 
-
-    if (
-        normalized ===
-        "in progress"
-    ) {
-
+    if (normalized === "in progress") {
         return "status-progress";
-
     }
-
 
     if (
-        normalized ===
-        "delayed"
+        normalized === "delayed" ||
+        normalized === "overdue"
     ) {
-
         return "status-delayed";
-
     }
-
 
     return "status-not-started";
-
 }
+
 
 
 /* ==================================================
@@ -3016,6 +2819,38 @@ function generatePlanningForm() {
     }
 
 
+
+    
+        const addPriorityButton = document.createElement("button");
+
+        addPriorityButton.type = "button";
+        addPriorityButton.className = "add-priority-btn";
+        addPriorityButton.textContent = "+ Add Priority";
+
+        priorityContainer.parentNode.insertBefore(
+            addPriorityButton,
+            priorityContainer.nextSibling
+        );
+
+
+        
+addPriorityButton.addEventListener("click", function () {
+
+    const existingPriorities =
+        priorityContainer.querySelectorAll(".priority-block");
+
+    const nextPriorityIndex = existingPriorities.length + 1;
+
+    createPriorityBlock(
+        nextPriorityIndex,
+        0,
+        priorityContainer
+    );
+
+});
+
+
+
     /*
      * Create priority blocks.
      */
@@ -3095,124 +2930,83 @@ function generatePlanningForm() {
 }
 
 
+
 /* ==================================================
    CREATE PRIORITY BLOCK
 ================================================== */
 
-function createPriorityBlock(
-    priorityIndex,
-    taskCount,
-    container
-) {
+function createPriorityBlock(priorityIndex, taskCount, container) {
+    if (!container) return;
 
-    if (!container) {
-        return;
-    }
-
-
-    const priorityBlock =
-        document.createElement(
-            "div"
-        );
-
-
-    priorityBlock.className =
-        "priority-block";
-
-
-    priorityBlock.dataset.priorityIndex =
-        priorityIndex;
-
+    const priorityBlock = document.createElement("div");
+    priorityBlock.className = "priority-block";
+    priorityBlock.dataset.priorityIndex = priorityIndex;
 
     priorityBlock.innerHTML = `
+        <div class="priority-header">
+            <h3>Priority ${priorityIndex}</h3>
 
-    <div class="priority-header">
+            <button
+                type="button"
+                class="remove-priority-btn"
+            >
+                Remove Priority
+            </button>
+        </div>
 
-      <h3>
-        Priority ${priorityIndex}
-      </h3>
+        <div class="form-group">
+            <label>Priority Statement</label>
+            <input
+                type="text"
+                class="priority-input"
+                data-field="priority"
+                placeholder="Enter priority"
+            >
+        </div>
 
-    </div>
+        <div class="form-group">
+            <label>Sector Objective</label>
 
-    <div class="form-group">
+            <select
+                class="objective-input"
+                data-field="objective"
+                required
+            >
+                <option value="">Select Sector Objective</option>
 
-      <label>
-        Priority Statement
-      </label>
+                <option value="Universal access to better and efficiently managed quality healthcare services">
+                    1. Universal access to better and efficiently managed quality healthcare services
+                </option>
 
-      <input
-        type="text"
-        class="priority-input"
-        data-field="priority"
-        placeholder="Enter priority"
-      >
+                <option value="Reduce avoidable maternal, adolescent and child deaths and disabilities">
+                    2. Reduce avoidable maternal, adolescent and child deaths and disabilities
+                </option>
 
-    </div>
+                <option value="Increase access to responsive clinical and public health emergency services">
+                    3. Increase access to responsive clinical and public health emergency services
+                </option>
+            </select>
+        </div>
 
-    <div class="form-group">
+        <div class="tasks-container">
+            <h4>Tasks / Activities</h4>
 
-      <label>
-        Objective / Expected Result
-      </label>
+            <div class="task-list"></div>
 
-      <textarea
-        class="objective-input"
-        data-field="objective"
-        placeholder="Enter objective or expected result"
-      ></textarea>
+            <button
+                type="button"
+                class="add-task-btn"
+            >
+                + Add Task
+            </button>
+        </div>
+    `;
 
-    </div>
-
-    <div class="form-group">
-
-      <label>
-        Responsible Person
-      </label>
-
-      <input
-        type="text"
-        class="responsible-input"
-        data-field="responsible"
-        placeholder="Enter responsible person"
-      >
-
-    </div>
-
-    <div class="tasks-container">
-
-      <h4>
-        Tasks / Activities
-      </h4>
-
-      <div class="task-list"></div>
-
-      <button
-        type="button"
-        class="add-task-btn"
-      >
-        + Add Task
-      </button>
-
-    </div>
-
-  `;
-
-
-    const tasksContainer =
-        priorityBlock.querySelector(
-            ".task-list"
-        );
-
-
+    const tasksContainer = priorityBlock.querySelector(".task-list");
     let currentTaskCount = 0;
 
-
-    for (
-        let taskIndex = 1;
-        taskIndex <= taskCount;
-        taskIndex++
-    ) {
-
+    // Create the requested number of initial task forms.
+    for (let i = 0; i < taskCount; i++) {
         currentTaskCount++;
 
         createTaskBlock(
@@ -3220,41 +3014,52 @@ function createPriorityBlock(
             currentTaskCount,
             tasksContainer
         );
-
     }
 
+    // Add another task to this priority.
+    const addTaskButton = priorityBlock.querySelector(".add-task-btn");
 
-    const addTaskButton =
-        priorityBlock.querySelector(
-            ".add-task-btn"
+    addTaskButton.addEventListener("click", function () {
+        currentTaskCount++;
+
+        createTaskBlock(
+            priorityIndex,
+            currentTaskCount,
+            tasksContainer
+        );
+    });
+
+    // Remove this priority and all task forms inside it.
+    const removePriorityButton =
+        priorityBlock.querySelector(".remove-priority-btn");
+
+    removePriorityButton.addEventListener("click", function () {
+        const confirmed = window.confirm(
+            `Remove Priority ${priorityBlock.dataset.priorityIndex} and all its task forms?`
         );
 
+        if (!confirmed) return;
 
-    if (addTaskButton) {
+        priorityBlock.remove();
 
-        addTaskButton.addEventListener(
-            "click",
-            function () {
+        // Update the visible priority headings.
+        // Keep existing data indices unchanged.
+        const remainingPriorities =
+            container.querySelectorAll(".priority-block");
 
-                currentTaskCount++;
+        remainingPriorities.forEach(function (block, index) {
+            const heading = block.querySelector(".priority-header h3");
 
-                createTaskBlock(
-                    priorityIndex,
-                    currentTaskCount,
-                    tasksContainer
-                );
-
+            if (heading) {
+                heading.textContent =
+                    `Priority ${index + 1}`;
             }
-        );
+        });
+    });
 
-    }
-
-
-    container.appendChild(
-        priorityBlock
-    );
-
+    container.appendChild(priorityBlock);
 }
+
 
 /* ==================================================
    CREATE TASK BLOCK
@@ -3308,13 +3113,13 @@ function createTaskBlock(
       <div class="form-group">
 
         <label>
-          Task / Activity
+          Planned Activity
         </label>
 
         <textarea
           class="task-input"
           data-field="task"
-          placeholder="Enter task or activity"
+          placeholder="Enter planned activity"
         ></textarea>
 
       </div>
@@ -3339,7 +3144,7 @@ function createTaskBlock(
       <div class="form-group">
 
         <label>
-          Target
+          Number Planned
         </label>
 
         <input
@@ -3356,7 +3161,7 @@ function createTaskBlock(
       <div class="form-group">
 
         <label>
-          Actual
+          Number Implemented
         </label>
 
         <input
@@ -3412,14 +3217,14 @@ function createTaskBlock(
       <div class="form-group">
 
         <label>
-          Responsible Person
+          Unit Responsible
         </label>
 
         <input
           type="text"
           class="task-responsible-input"
           data-field="responsible"
-          placeholder="Enter responsible person"
+          placeholder="Enter unit responsible"
         >
 
       </div>
@@ -4390,7 +4195,7 @@ async function submitProgressUpdate() {
 
         showFormMessage(
             messageElement,
-            "Please enter the actual achievement.",
+            "Please enter the Number Implemented.",
             "error"
         );
 
@@ -4754,137 +4559,231 @@ function generateQuarterlyReport() {
         HPD Quarterly Performance Report
       </title>
 
-      <style>
+     
+<style>
+    * {
+        box-sizing: border-box;
+    }
 
+    body {
+        margin: 0;
+        padding: 30px;
+        font-family: Arial, sans-serif;
+        background: #f4f7f6;
+        color: #17201d;
+        line-height: 1.5;
+    }
+
+    .report-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 32px;
+        background: #ffffff;
+        border: 1px solid #dce5df;
+        border-radius: 10px;
+    }
+
+    .report-header {
+        border-bottom: 4px solid #0b5d3b;
+        padding-bottom: 20px;
+        margin-bottom: 25px;
+    }
+
+    .organization {
+        color: #0b5d3b;
+        font-size: 12px;
+        font-weight: bold;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    h1 {
+        margin: 8px 0;
+        color: #0b5d3b;
+        font-size: 28px;
+    }
+
+    .report-subtitle {
+        margin: 0;
+        color: #66736e;
+        font-size: 14px;
+    }
+
+    .report-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .meta-item {
+        padding: 12px 16px;
+        min-width: 180px;
+        background: #e8f3ee;
+        border: 1px solid #c9e3d5;
+        border-radius: 6px;
+    }
+
+    .meta-label {
+        display: block;
+        color: #66736e;
+        font-size: 11px;
+        text-transform: uppercase;
+    }
+
+    .meta-value {
+        display: block;
+        margin-top: 4px;
+        color: #0b5d3b;
+        font-size: 15px;
+        font-weight: bold;
+    }
+
+    .section-heading {
+        margin: 30px 0 8px;
+        color: #0b5d3b;
+        font-size: 19px;
+    }
+
+    .table-description {
+        margin: 0 0 14px;
+        color: #66736e;
+        font-size: 12px;
+    }
+
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        border: 1px solid #dce5df;
+        border-radius: 7px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+    }
+
+    th {
+        padding: 13px 12px;
+        background: #0b5d3b;
+        color: #ffffff;
+        text-align: left;
+        font-size: 11px;
+        text-transform: uppercase;
+    }
+
+    td {
+        padding: 12px;
+        border-bottom: 1px solid #e1e8e4;
+        text-align: left;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    tbody tr:nth-child(even) {
+        background: #f4f8f5;
+    }
+
+    tbody tr:hover {
+        background: #e8f3ee;
+    }
+
+    .total-row td {
+        background: #dcefe4;
+        color: #0b5d3b;
+        font-weight: bold;
+        border-top: 2px solid #0b5d3b;
+    }
+
+    .empty {
+        padding: 24px;
+        text-align: center;
+        color: #66736e;
+    }
+
+    .print-button {
+        margin-bottom: 22px;
+        padding: 11px 18px;
+        border: none;
+        border-radius: 6px;
+        background: #0b5d3b;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .print-button:hover {
+        background: #08452c;
+    }
+
+    .report-footer {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 30px;
+        padding-top: 15px;
+        border-top: 1px solid #dce5df;
+        color: #66736e;
+        font-size: 11px;
+    }
+
+    @media (max-width: 700px) {
         body {
+            padding: 10px;
+        }
 
-          font-family:
-            Arial,
-            sans-serif;
-
-          margin:
-            40px;
-
-          color:
-            #222;
-
+        .report-container {
+            padding: 16px;
         }
 
         h1 {
+            font-size: 22px;
+        }
+    }
 
-          margin-bottom:
-            5px;
+    @page {
+        size: landscape;
+        margin: 12mm;
+    }
 
+    @media print {
+        body {
+            padding: 0;
+            background: #ffffff;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
-        h2 {
-
-          margin-top:
-            30px;
-
-        }
-
-        .summary {
-
-          display:
-            grid;
-
-          grid-template-columns:
-            repeat(4, 1fr);
-
-          gap:
-            15px;
-
-          margin:
-            25px 0;
-
-        }
-
-        .card {
-
-          border:
-            1px solid #ddd;
-
-          padding:
-            15px;
-
-          border-radius:
-            8px;
-
-        }
-
-        .card strong {
-
-          display:
-            block;
-
-          font-size:
-            24px;
-
-          margin-top:
-            5px;
-
-        }
-
-        table {
-
-          width:
-            100%;
-
-          border-collapse:
-            collapse;
-
-          margin-top:
-            20px;
-
-        }
-
-        th,
-        td {
-
-          border:
-            1px solid #ddd;
-
-          padding:
-            8px;
-
-          text-align:
-            left;
-
-        }
-
-        th {
-
-          font-weight:
-            bold;
-
+        .report-container {
+            max-width: none;
+            padding: 0;
+            border: none;
+            border-radius: 0;
         }
 
         .print-button {
-
-          margin-bottom:
-            20px;
-
-          padding:
-            10px 16px;
-
-          cursor:
-            pointer;
-
+            display: none !important;
         }
 
-        @media print {
-
-          .print-button {
-
-            display:
-              none;
-
-          }
-
+        .table-wrapper {
+            overflow: visible;
+            border: none;
         }
 
-      </style>
+        th, td {
+            padding: 7px;
+            font-size: 9px;
+        }
+
+        tr {
+            break-inside: avoid;
+        }
+    }
+</style>
+
 
     </head>
 
@@ -5191,312 +5090,458 @@ function generateQuarterlyReport() {
    FUNDING REPORT
 ================================================== */
 
+
 function generateFundingReport() {
 
-    const filteredTasks =
-        getFilteredTasks();
-
+    const filteredTasks = getFilteredTasks();
 
     const fundingData = {};
+    let activityRows = "";
 
+    // Build the activity details and funding summary.
+    filteredTasks.forEach(function (task) {
 
-    filteredTasks.forEach(
-        function (task) {
+        const funding =
+            task.Source_of_Funding ||
+            task.Funding_Source ||
+            task.funding ||
+            "Not Specified";
 
-            const funding =
-                task.Source_of_Funding ||
-                "Not Specified";
+        const activity =
+            task.Task ||
+            task.Planned_Activity ||
+            task.Activity ||
+            "Not Specified";
 
+        const unitId = String(task.Unit_ID || "").trim();
 
-            if (!fundingData[funding]) {
+        const unit = units.find(function (item) {
+            return String(item.Unit_ID || "").trim() === unitId;
+        });
 
-                fundingData[funding] = {
+        const unitName = unit
+            ? unit.Unit_Name
+            : (unitId || "Not Specified");
 
-                    tasks: 0,
+        const priority =
+            task.Priority || "Not Specified";
 
-                    achievement: 0
+        const numberPlanned =
+            Number(task.Target || 0);
 
-                };
+        const numberImplemented =
+            Number(task.Actual || 0);
 
-            }
-
-
-            fundingData[funding].tasks++;
-
-            fundingData[funding].achievement +=
-                Number(
-                    task["Achievement_%"] ||
-                    0
-                );
-
-        }
-    );
-
-
-    const reportWindow =
-        window.open(
-            "",
-            "_blank"
-        );
-
-
-    if (!reportWindow) {
-
-        alert(
-            "Please allow pop-ups to generate the report."
-        );
-
-        return;
-
-    }
-
-
-    let fundingRows =
-        "";
-
-
-    Object.keys(
-        fundingData
-    ).forEach(
-        function (funding) {
-
-            const item =
-                fundingData[funding];
-
-
-            const average =
-                item.tasks > 0
-                    ? item.achievement /
-                    item.tasks
+        const achievement =
+            task["Achievement_%"] !== undefined &&
+            task["Achievement_%"] !== null
+                ? Number(task["Achievement_%"]) || 0
+                : numberPlanned > 0
+                    ? (numberImplemented / numberPlanned) * 100
                     : 0;
 
+        // Activity details row.
+        activityRows += `
+            <tr>
+                <td>${escapeHtml(unitName)}</td>
+                <td>${escapeHtml(priority)}</td>
+                <td>${escapeHtml(activity)}</td>
+                <td>${escapeHtml(funding)}</td>
+                <td>${numberPlanned}</td>
+                <td>${numberImplemented}</td>
+            </tr>
+        `;
 
-            fundingRows += `
-
-        <tr>
-
-          <td>
-            ${escapeHtml(
-                funding
-            )}
-          </td>
-
-          <td>
-            ${item.tasks}
-          </td>
-
-          <td>
-            ${formatPercentage(
-                average
-            )}
-          </td>
-
-        </tr>
-
-      `;
-
+        // Initialise funding summary.
+        if (!fundingData[funding]) {
+            fundingData[funding] = {
+                activities: 0,
+                planned: 0,
+                implemented: 0,
+                achievementTotal: 0
+            };
         }
-    );
 
+        const summary = fundingData[funding];
 
-    if (!fundingRows) {
+        summary.activities++;
+        summary.planned += numberPlanned;
+        summary.implemented += numberImplemented;
+        summary.achievementTotal += achievement;
 
-        fundingRows = `
+    });
 
-      <tr>
+    const reportWindow = window.open("", "_blank");
 
-        <td
-          colspan="3"
-          style="text-align:center;"
-        >
-          No funding data available
-          for ${escapeHtml(
-            currentQuarter
-        )}
-        </td>
-
-      </tr>
-
-    `;
-
+    if (!reportWindow) {
+        alert("Please allow pop-ups to generate the report.");
+        return;
     }
 
+    let fundingRows = "";
+    let grandActivities = 0;
+    let grandPlanned = 0;
+    let grandImplemented = 0;
+    let grandAchievementTotal = 0;
+
+    Object.keys(fundingData).forEach(function (funding) {
+
+        const item = fundingData[funding];
+
+        const averageAchievement = item.activities > 0
+            ? item.achievementTotal / item.activities
+            : 0;
+
+        grandActivities += item.activities;
+        grandPlanned += item.planned;
+        grandImplemented += item.implemented;
+        grandAchievementTotal += item.achievementTotal;
+
+        fundingRows += `
+            <tr>
+                <td>${escapeHtml(funding)}</td>
+                <td>${item.activities}</td>
+                <td>${item.planned}</td>
+                <td>${item.implemented}</td>
+                <td>${formatPercentage(averageAchievement)}</td>
+            </tr>
+        `;
+    });
+
+    if (!activityRows) {
+        activityRows = `
+            <tr>
+                <td colspan="6" class="empty">
+                    No activity data available for
+                    ${escapeHtml(currentQuarter)}
+                </td>
+            </tr>
+        `;
+    }
+
+    if (!fundingRows) {
+        fundingRows = `
+            <tr>
+                <td colspan="5" class="empty">
+                    No funding data available for
+                    ${escapeHtml(currentQuarter)}
+                </td>
+            </tr>
+        `;
+    } else {
+        const overallAverage = grandActivities > 0
+            ? grandAchievementTotal / grandActivities
+            : 0;
+
+        fundingRows += `
+            <tr class="total-row">
+                <td>Grand Total</td>
+                <td>${grandActivities}</td>
+                <td>${grandPlanned}</td>
+                <td>${grandImplemented}</td>
+                <td>${formatPercentage(overallAverage)}</td>
+            </tr>
+        `;
+    }
 
     const reportHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>HPD Source of Funding Report</title>
 
-    <!DOCTYPE html>
+            
+<style>
+    * {
+        box-sizing: border-box;
+    }
 
-    <html>
+    body {
+        margin: 0;
+        padding: 30px;
+        font-family: Arial, sans-serif;
+        background: #f4f7f6;
+        color: #17201d;
+        line-height: 1.5;
+    }
 
-    <head>
+    .report-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 32px;
+        background: #ffffff;
+        border: 1px solid #dce5df;
+        border-radius: 10px;
+    }
 
-      <title>
-        HPD Funding Summary
-      </title>
+    .report-header {
+        border-bottom: 4px solid #0b5d3b;
+        padding-bottom: 20px;
+        margin-bottom: 25px;
+    }
 
-      <style>
+    .organization {
+        color: #0b5d3b;
+        font-size: 12px;
+        font-weight: bold;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
 
+    h1 {
+        margin: 8px 0;
+        color: #0b5d3b;
+        font-size: 28px;
+    }
+
+    .report-subtitle {
+        margin: 0;
+        color: #66736e;
+        font-size: 14px;
+    }
+
+    .report-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .meta-item {
+        padding: 12px 16px;
+        min-width: 180px;
+        background: #e8f3ee;
+        border: 1px solid #c9e3d5;
+        border-radius: 6px;
+    }
+
+    .meta-label {
+        display: block;
+        color: #66736e;
+        font-size: 11px;
+        text-transform: uppercase;
+    }
+
+    .meta-value {
+        display: block;
+        margin-top: 4px;
+        color: #0b5d3b;
+        font-size: 15px;
+        font-weight: bold;
+    }
+
+    .section-heading {
+        margin: 30px 0 8px;
+        color: #0b5d3b;
+        font-size: 19px;
+    }
+
+    .table-description {
+        margin: 0 0 14px;
+        color: #66736e;
+        font-size: 12px;
+    }
+
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        border: 1px solid #dce5df;
+        border-radius: 7px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+    }
+
+    th {
+        padding: 13px 12px;
+        background: #0b5d3b;
+        color: #ffffff;
+        text-align: left;
+        font-size: 11px;
+        text-transform: uppercase;
+    }
+
+    td {
+        padding: 12px;
+        border-bottom: 1px solid #e1e8e4;
+        text-align: left;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    tbody tr:nth-child(even) {
+        background: #f4f8f5;
+    }
+
+    tbody tr:hover {
+        background: #e8f3ee;
+    }
+
+    .total-row td {
+        background: #dcefe4;
+        color: #0b5d3b;
+        font-weight: bold;
+        border-top: 2px solid #0b5d3b;
+    }
+
+    .empty {
+        padding: 24px;
+        text-align: center;
+        color: #66736e;
+    }
+
+    .print-button {
+        margin-bottom: 22px;
+        padding: 11px 18px;
+        border: none;
+        border-radius: 6px;
+        background: #0b5d3b;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .print-button:hover {
+        background: #08452c;
+    }
+
+    .report-footer {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 30px;
+        padding-top: 15px;
+        border-top: 1px solid #dce5df;
+        color: #66736e;
+        font-size: 11px;
+    }
+
+    @media (max-width: 700px) {
         body {
+            padding: 10px;
+        }
 
-          font-family:
-            Arial,
-            sans-serif;
-
-          margin:
-            40px;
-
-          color:
-            #222;
-
+        .report-container {
+            padding: 16px;
         }
 
         h1 {
+            font-size: 22px;
+        }
+    }
 
-          margin-bottom:
-            5px;
+    @page {
+        size: landscape;
+        margin: 12mm;
+    }
 
+    @media print {
+        body {
+            padding: 0;
+            background: #ffffff;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
-        table {
-
-          width:
-            100%;
-
-          border-collapse:
-            collapse;
-
-          margin-top:
-            25px;
-
-        }
-
-        th,
-        td {
-
-          border:
-            1px solid #ddd;
-
-          padding:
-            10px;
-
-          text-align:
-            left;
-
-        }
-
-        th {
-
-          font-weight:
-            bold;
-
+        .report-container {
+            max-width: none;
+            padding: 0;
+            border: none;
+            border-radius: 0;
         }
 
         .print-button {
-
-          margin-bottom:
-            20px;
-
-          padding:
-            10px 16px;
-
-          cursor:
-            pointer;
-
+            display: none !important;
         }
 
-        @media print {
-
-          .print-button {
-
-            display:
-              none;
-
-          }
-
+        .table-wrapper {
+            overflow: visible;
+            border: none;
         }
 
-      </style>
+        th, td {
+            padding: 7px;
+            font-size: 9px;
+        }
 
-    </head>
+        tr {
+            break-inside: avoid;
+        }
+    }
+</style>
 
-    <body>
+        </head>
 
-      <button
-        class="print-button"
-        onclick="window.print()"
-      >
-        Print Report
-      </button>
+        <body>
+            <button
+                class="print-button"
+                onclick="window.print()"
+            >
+                Print Report
+            </button>
 
+            <h1>HPD Source of Funding Report</h1>
 
-      <h1>
-        HPD Funding Summary
-      </h1>
+            <p>
+                Ghana Health Service — Health Promotion Division
+            </p>
 
+            <p>
+                Quarter:
+                <strong>${escapeHtml(currentQuarter)}</strong>
+            </p>
 
-      <p>
-        Ghana Health Service -
-        Health Promotion Division
-      </p>
+            <h2>1. Activity Details</h2>
 
+            <table>
+                <thead>
+                    <tr>
+                        <th>Department / Unit</th>
+                        <th>Priority</th>
+                        <th>Planned Activity</th>
+                        <th>Source of Funding</th>
+                        <th>Number Planned</th>
+                        <th>Number Implemented</th>
+                    </tr>
+                </thead>
 
-      <p>
-        Quarter:
-        <strong>
-          ${escapeHtml(
-        currentQuarter
-    )}
-        </strong>
-      </p>
+                <tbody>
+                    ${activityRows}
+                </tbody>
+            </table>
 
+            <h2>2. Summary by Source of Funding</h2>
 
-      <table>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Source of Funding</th>
+                        <th>Number of Activities</th>
+                        <th>Total Number Planned</th>
+                        <th>Total Number Implemented</th>
+                        <th>Average Achievement</th>
+                    </tr>
+                </thead>
 
-        <thead>
-
-          <tr>
-
-            <th>
-              Source of Funding
-            </th>
-
-            <th>
-              Number of Tasks
-            </th>
-
-            <th>
-              Average Achievement
-            </th>
-
-          </tr>
-
-        </thead>
-
-        <tbody>
-
-          ${fundingRows}
-
-        </tbody>
-
-      </table>
-
-
-    </body>
-
-    </html>
-
-  `;
-
+                <tbody>
+                    ${fundingRows}
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `;
 
     reportWindow.document.open();
-
-    reportWindow.document.write(
-        reportHtml
-    );
-
+    reportWindow.document.write(reportHtml);
     reportWindow.document.close();
 
 }
+
 
 
 /* ==================================================

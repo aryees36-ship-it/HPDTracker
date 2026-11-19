@@ -650,3 +650,66 @@ th {
     }
 
 }
+
+
+
+/* =====================================================
+   HPD e-TRACKER TASK STATUS COLOURS
+===================================================== */
+
+.status-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    margin: 2px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+/* Completed — Green */
+.status-completed {
+    background-color: #DCFCE7;
+    color: #166534;
+    border: 1px solid #16A34A;
+}
+
+/* In Progress — Yellow */
+.status-progress {
+    background-color: #FEF9C3;
+    color: #854D0E;
+    border: 1px solid #EAB308;
+}
+
+/* Not Started — Blue */
+.status-not-started {
+    background-color: #DBEAFE;
+    color: #1E40AF;
+    border: 1px solid #2563EB;
+}
+
+/* Delayed / Overdue — Red */
+.status-delayed {
+    background-color: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #DC2626;
+}
+
+
+.add-priority-btn {
+    display: block;
+    margin: 16px 0;
+    padding: 10px 16px;
+    background-color: #166534;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.add-priority-btn:hover {
+    background-color: #14532d;
+}
+
